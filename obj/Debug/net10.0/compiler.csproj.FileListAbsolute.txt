@@ -1,0 +1,14 @@
+/home/kex1t/Documents/VisualStud/compiler/bin/Debug/net10.0/compiler
+/home/kex1t/Documents/VisualStud/compiler/bin/Debug/net10.0/compiler.deps.json
+/home/kex1t/Documents/VisualStud/compiler/bin/Debug/net10.0/compiler.runtimeconfig.json
+/home/kex1t/Documents/VisualStud/compiler/bin/Debug/net10.0/compiler.dll
+/home/kex1t/Documents/VisualStud/compiler/bin/Debug/net10.0/compiler.pdb
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.GeneratedMSBuildEditorConfig.editorconfig
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.AssemblyInfoInputs.cache
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.AssemblyInfo.cs
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.csproj.CoreCompileInputs.cache
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.dll
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/refint/compiler.dll
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.pdb
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.genruntimeconfig.cache
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/ref/compiler.dll

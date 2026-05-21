@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "xe2zGkViAA0=",
+  "success": true,
+  "projectFilePath": "/home/kex1t/Documents/VisualStud/compiler/compiler.csproj",
+  "expectedPackageFiles": [
+    "/home/kex1t/.nuget/packages/microsoft.aspnetcore.app.ref/10.0.4/microsoft.aspnetcore.app.ref.10.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}
