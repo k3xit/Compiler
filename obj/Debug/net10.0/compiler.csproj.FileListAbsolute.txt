@@ -12,3 +12,4 @@
 /home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.pdb
 /home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.genruntimeconfig.cache
 /home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/ref/compiler.dll
+/home/kex1t/Documents/VisualStud/compiler/obj/Debug/net10.0/compiler.sourcelink.json

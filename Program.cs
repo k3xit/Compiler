@@ -8,52 +8,38 @@ namespace Компилятор
         public static void Main()
         {
             string testFile1 = "test1.pas";
-            string testFile2 = "test2.pas";
-            string testFile3 = "test3.pas";
+            string resultFile1 = "test1.txt";
+            
 
-            File.WriteAllText(testFile1, 
-                "program Test1;\nbegin\n  var x := 10;\n  " +
-                "if x > 5 then\n    x := 0;\nend.");
-            File.WriteAllText(testFile2, 
-                "program Test2;\nvar\n  a : integer;\n" +
-                "begin\n  a := 123;\nend.");
-            File.WriteAllText(testFile3, 
-                "program Test3;\nbegin\n  while true do\n" +
-                "    begin\n    end;\nend.");
-
-            Console.WriteLine("=== ЗАПУСК ТЕСТА 1 ===");
-            RunTest(testFile1);
-
-            Console.WriteLine("\n=== ЗАПУСК ТЕСТА 2 ===");
-            RunTest(testFile2);
-
-            Console.WriteLine("\n=== ЗАПУСК ТЕСТА 3 ===");
-            RunTest(testFile3);
-
-            if (File.Exists(testFile1)) File.Delete(testFile1);
-            if (File.Exists(testFile2)) File.Delete(testFile2);
-            if (File.Exists(testFile3)) File.Delete(testFile3);
+            Console.WriteLine("=== ЗАПУСК ТЕСТА ===");
+            RunTest(testFile1, resultFile1);
 
             Console.ReadLine();
         }
 
-        private static void RunTest(string filePath)
+        private static void RunTest(string srcPath, string resPath)
         {
-            InputOutput.Initialize(filePath);
+            InputOutput.Initialize(srcPath);
+            InputOutput.InitializeCodeFile(resPath);
+            
+            LexicalAnalyzer analyzer = new LexicalAnalyzer();
 
-            while (InputOutput.File != null)
+            Console.WriteLine("--- Поток кодов символов ---");
+            
+            while (InputOutput.Ch != '\0')
             {
-                uint lastLine = InputOutput.PositionNow.lineNumber;
-                byte lastChar = InputOutput.PositionNow.charNumber;
-
-                InputOutput.NextCh();
-
-                if (InputOutput.PositionNow.lineNumber == lastLine 
-                    && InputOutput.PositionNow.charNumber == lastChar)
+                byte code = analyzer.NextSym();
+                
+                if (code != 0)
                 {
-                    break;
+                    Console.Write($"{code} ");
+                    InputOutput.WriteCode(code); // Запись в Файл 2
                 }
             }
+            
+            Console.WriteLine("\n\n--- Листинг программы ---");
+            InputOutput.OutputResult();
+            Console.WriteLine($"\nКоды символов сохранены в: {resPath}");
         }
     }
 }

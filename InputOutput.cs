@@ -6,36 +6,40 @@ namespace Компилятор
 {
     public struct TextPosition
     {
-        public uint lineNumber;
-        public byte charNumber;
+        private uint _lineNumber;
+        private byte _charNumber;
+
+        public uint LineNumber => _lineNumber;
+        public byte CharNumber => _charNumber;
 
         public TextPosition(uint ln = 0, byte c = 0)
         {
-            lineNumber = ln;
-            charNumber = c;
+            _lineNumber = ln;
+            _charNumber = c;
         }
     }
 
     public struct Err
     {
-        public TextPosition errorPosition;
-        public byte errorCode;
+        private TextPosition _errorPosition;
+        private byte _errorCode;
+
+        public TextPosition ErrorPosition => _errorPosition;
+        public byte ErrorCode => _errorCode;
 
         public Err(TextPosition errorPosition, byte errorCode)
         {
-            this.errorPosition = errorPosition;
-            this.errorCode = errorCode;
+            _errorPosition = errorPosition;
+            _errorCode = errorCode;
         }
     }
 
     public class InputOutput
     {
         private const byte Errmax = 9;
-        private static readonly List<string> ProgramText = 
+        private static readonly List<string> _programText = 
             new List<string>();
-        private static readonly Dictionary<uint, Err> PlannedErrors = 
-            new Dictionary<uint, Err>();
-        private static readonly Dictionary<byte, string> ErrorMessages = 
+        private static readonly Dictionary<byte, string> _errorMessages = 
             new Dictionary<byte, string>
             {
                 { 14, "Ожидалась точка с запятой" },
@@ -43,165 +47,137 @@ namespace Компилятор
                 { 203, "Целая константа превышает предел" }
             };
 
-        private static int currentLineIndex = -1;
-        private static bool isFinished;
+        private static int _currentLineIndex = -1;
+        private static char _ch;
+        private static TextPosition _positionNow = new TextPosition();
+        private static List<Err> _errList = new List<Err>();
+        private static StreamReader _file;
+        private static StreamWriter _codeFile;
+        private static uint _errCount;
 
-        public static char Ch { get; set; }
-        public static TextPosition PositionNow = new TextPosition();
-        public static List<Err> ErrList { get; set; } = new List<Err>();
-        public static StreamReader File { get; set; }
-        public static uint ErrCount { get; set; }
+        public static char Ch => _ch;
+        public static TextPosition PositionNow => _positionNow;
+        public static StreamReader File => _file;
+        public static uint ErrCount => _errCount;
 
         public static void Initialize(string filePath)
         {
-            File = new StreamReader(filePath);
-            ProgramText.Clear();
-            PlannedErrors.Clear();
-            ErrList.Clear();
-            ErrCount = 0;
-            PositionNow = new TextPosition(0, 0);
-            currentLineIndex = -1;
-            isFinished = false;
+            _file = new StreamReader(filePath);
+            _programText.Clear();
+            _errList.Clear();
+            _errCount = 0;
+            _positionNow = new TextPosition(0, 0);
+            _currentLineIndex = -1;
 
-            uint lineNum = 1;
-            List<uint> validLines = new List<uint>();
-
-            while (!File.EndOfStream)
+            while (!_file.EndOfStream)
             {
-                string currentLine = File.ReadLine();
-                ProgramText.Add(currentLine);
-
-                if (!string.IsNullOrEmpty(currentLine))
-                {
-                    validLines.Add(lineNum);
-                }
-                lineNum++;
+                _programText.Add(_file.ReadLine());
             }
+            _file.Close();
 
-            File.Close();
-
-            Random random = new Random();
-            byte[] possibleCodes = { 14, 51, 203 };
-            int errorsToPlace = Math.Min(3, validLines.Count);
-
-            for (int i = 0; i < errorsToPlace; i++)
+            if (_programText.Count > 0)
             {
-                int targetIndex = random.Next(0, validLines.Count);
-                uint targetLine = validLines[targetIndex];
-                validLines.RemoveAt(targetIndex);
-
-                string lineText = ProgramText[(int)targetLine - 1];
-                byte randomChar = (byte)random.Next(0, lineText.Length);
-                byte randomCode = possibleCodes[
-                    random.Next(0, possibleCodes.Length)];
-
-                TextPosition errPos = new TextPosition(
-                    targetLine, randomChar);
-                PlannedErrors[targetLine] = new Err(errPos, randomCode);
-            }
-
-            if (ProgramText.Count > 0)
-            {
-                currentLineIndex = 0;
-                PositionNow.lineNumber = 1;
-                PositionNow.charNumber = 0;
-                Ch = ProgramText[0].Length > 0 
-                    ? ProgramText[0][0] 
+                _currentLineIndex = 0;
+                _positionNow = new TextPosition(1, 0);
+                _ch = _programText[0].Length > 0 
+                    ? _programText[0][0] 
                     : '\n';
+            }
+        }
+        public static void InitializeCodeFile(string filePath)
+        {
+            _codeFile = new StreamWriter(filePath);
+        }
+
+        public static void WriteCode(byte code)
+        {
+            if (_codeFile != null && code != 0)
+            {
+                _codeFile.Write($"{code} ");
             }
         }
 
         public static void NextCh()
         {
-            if (isFinished)
+            if (_currentLineIndex == -1 
+                || _currentLineIndex >= _programText.Count)
             {
                 return;
             }
 
-            if (currentLineIndex == -1 
-                || currentLineIndex >= ProgramText.Count)
-            {
-                End();
-                return;
-            }
+            string currentLine = _programText[_currentLineIndex];
 
-            string currentLine = ProgramText[currentLineIndex];
-
-            if (PlannedErrors.ContainsKey(PositionNow.lineNumber))
+            if (_positionNow.CharNumber >= currentLine.Length - 1)
             {
-                Err planned = PlannedErrors[PositionNow.lineNumber];
-                if (planned.errorPosition.charNumber == 
-                    PositionNow.charNumber)
+                _currentLineIndex++;
+                if (_currentLineIndex < _programText.Count)
                 {
-                    Error(planned.errorCode, PositionNow);
-                }
-            }
-
-            if (PositionNow.charNumber >= currentLine.Length - 1)
-            {
-                currentLineIndex++;
-                if (currentLineIndex < ProgramText.Count)
-                {
-                    PositionNow.lineNumber++;
-                    PositionNow.charNumber = 0;
-                    Ch = ProgramText[currentLineIndex].Length > 0 
-                        ? ProgramText[currentLineIndex][0] 
+                    _positionNow = new TextPosition(
+                        _positionNow.LineNumber + 1, 0);
+                    _ch = _programText[_currentLineIndex].Length > 0 
+                        ? _programText[_currentLineIndex][0] 
                         : '\n';
                 }
                 else
                 {
-                    End();
+                    _currentLineIndex = -1;
+                    _ch = '\0';
                 }
             }
             else
             {
-                PositionNow.charNumber++;
-                Ch = currentLine[PositionNow.charNumber];
+                _positionNow = new TextPosition(
+                    _positionNow.LineNumber, 
+                    (byte)(_positionNow.CharNumber + 1));
+                _ch = currentLine[_positionNow.CharNumber];
             }
         }
 
         public static void Error(byte errorCode, TextPosition position)
         {
-            if (ErrList.Count <= Errmax)
+            if (_errList.Count <= Errmax)
             {
-                ErrList.Add(new Err(position, errorCode));
+                _errList.Add(new Err(position, errorCode));
             }
         }
 
-        private static void End()
+        public static void OutputResult()
         {
-            isFinished = true;
-
-            for (int i = 0; i < ProgramText.Count; i++)
+            if (_codeFile != null)
             {
-                string lineText = ProgramText[i];
+                _codeFile.Close();
+            }
+
+            for (int i = 0; i < _programText.Count; i++)
+            {
+                string lineText = _programText[i];
                 Console.WriteLine(lineText);
 
                 uint currentLineNum = (uint)(i + 1);
-                List<Err> errorsInLine = ErrList.FindAll(
-                    e => e.errorPosition.lineNumber == currentLineNum);
+                List<Err> errorsInLine = _errList.FindAll(
+                    e => e.ErrorPosition.LineNumber == currentLineNum);
 
                 foreach (Err item in errorsInLine)
                 {
-                    ErrCount++;
+                    _errCount++;
                     string pointerLine = "";
-                    for (int j = 0; j < item.errorPosition.charNumber; j++)
+                    for (int j = 0; j < item.ErrorPosition.CharNumber; j++)
                     {
                         pointerLine += " ";
                     }
 
-                    string msg = ErrorMessages.ContainsKey(item.errorCode)
-                        ? ErrorMessages[item.errorCode]
+                    string msg = _errorMessages.ContainsKey(item.ErrorCode)
+                        ? _errorMessages[item.ErrorCode]
                         : "Неизвестная ошибка";
 
                     pointerLine += 
-                        $"^ ошибка: код {item.errorCode} ({msg})";
+                        $"^ ошибка: код {item.ErrorCode} ({msg})";
                     Console.WriteLine(pointerLine);
                 }
             }
 
             Console.WriteLine(
-                $"Компиляция завершена: ошибок — {ErrCount}!");
+                $"Компиляция завершена: ошибок — {_errCount}!");
         }
     }
 }
