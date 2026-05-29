@@ -33,6 +33,7 @@ namespace Компилятор
         public const byte Ident = 2;
         public const byte Floatc = 82;
         public const byte Intc = 15;
+        
         public const byte Casesy = 31;
         public const byte Elsesy = 32;
         public const byte Filesy = 57;
@@ -49,7 +50,7 @@ namespace Компилятор
         public const byte Tosy = 103;
         public const byte Endsy = 104;
         public const byte Varsy = 105;
-        public const byte Divsy = 106;
+        public static byte Divsy = 106;
         public const byte Andsy = 107;
         public const byte Notsy = 108;
         public const byte Forsy = 109;
@@ -77,17 +78,32 @@ namespace Компилятор
         private float _nmbFloat;
         private char _oneSymbol;
 
+        private int _parenthesisBalance = 0;
+        private TextPosition _lastLeftParPos;
+
         public byte Symbol => _symbol;
         public TextPosition Token => _token;
 
         public byte NextSym()
         {
-            while (InputOutput.Ch == ' ')
+            while (InputOutput.Ch == ' ' || InputOutput.Ch == '\n' 
+                || InputOutput.Ch == '\r')
             {
                 InputOutput.NextCh();
             }
 
             _token = InputOutput.PositionNow;
+
+            if (InputOutput.Ch == '\0')
+            {
+                if (_parenthesisBalance > 0)
+                {
+                    InputOutput.Error(250, _lastLeftParPos);
+                    _parenthesisBalance = 0;
+                }
+                _symbol = 0;
+                return _symbol;
+            }
 
             if (InputOutput.Ch >= '0' && InputOutput.Ch <= '9')
             {
@@ -146,6 +162,23 @@ namespace Компилятор
             {
                 switch (InputOutput.Ch)
                 {
+                    case '(':
+                        _symbol = Leftpar;
+                        _parenthesisBalance++;
+                        _lastLeftParPos = InputOutput.PositionNow;
+                        InputOutput.NextCh();
+                        break;
+                    case ')':
+                        _symbol = Rightpar;
+                        _parenthesisBalance--;
+                        if (_parenthesisBalance < 0)
+                        {
+                            InputOutput.Error(
+                                250, InputOutput.PositionNow);
+                            _parenthesisBalance = 0;
+                        }
+                        InputOutput.NextCh();
+                        break;
                     case '<':
                         InputOutput.NextCh();
                         if (InputOutput.Ch == '=')
@@ -177,6 +210,10 @@ namespace Компилятор
                         break;
                     case ';':
                         _symbol = Semicolon;
+                        InputOutput.NextCh();
+                        break;
+                    case '=':
+                        _symbol = Equal;
                         InputOutput.NextCh();
                         break;
                     case '.':

@@ -9,11 +9,13 @@ namespace Компилятор
         {
             string testFile1 = "test1.pas";
             string resultFile1 = "test1.txt";
-            
+            string testFile2 = "test2.pas";
+            string resultFile2 = "test2.txt";
 
-            Console.WriteLine("=== ЗАПУСК ТЕСТА ===");
+            Console.WriteLine("=== ЗАПУСК ТЕСТА 1 ===");
             RunTest(testFile1, resultFile1);
-
+            Console.WriteLine("=== ЗАПУСК ТЕСТА 2 ===");
+            RunTest(testFile2, resultFile2);
             Console.ReadLine();
         }
 
@@ -24,22 +26,19 @@ namespace Компилятор
             
             LexicalAnalyzer analyzer = new LexicalAnalyzer();
 
-            Console.WriteLine("--- Поток кодов символов ---");
-            
-            while (InputOutput.Ch != '\0')
+            while (true)
             {
                 byte code = analyzer.NextSym();
                 
-                if (code != 0)
+                if (code == 0)
                 {
-                    Console.Write($"{code} ");
-                    InputOutput.WriteCode(code); // Запись в Файл 2
+                    break;
                 }
+
+                InputOutput.WriteCode(code);
             }
             
-            Console.WriteLine("\n\n--- Листинг программы ---");
             InputOutput.OutputResult();
-            Console.WriteLine($"\nКоды символов сохранены в: {resPath}");
         }
     }
 }
