@@ -1,6 +1,9 @@
-program Test3;
+program ErrorInStatements;
+var
+  a, b, c : integer;
 begin
-  while true do
-    begin
-    end;
+  a := ((123);
+  b 5 + 10;
+  c := a + * 3;
+  a := b + c;
 end.

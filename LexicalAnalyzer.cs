@@ -50,7 +50,7 @@ namespace Компилятор
         public const byte Tosy = 103;
         public const byte Endsy = 104;
         public const byte Varsy = 105;
-        public static byte Divsy = 106;
+        public const byte Divsy = 106;
         public const byte Andsy = 107;
         public const byte Notsy = 108;
         public const byte Forsy = 109;
@@ -70,79 +70,88 @@ namespace Компилятор
         public const byte Functionsy = 123;
         public const byte Procedurensy = 124;
 
-        private readonly Keywords _keywordsObj = new Keywords();
+        private readonly InputOutput _io;
+        private readonly Keywords _keywordsObj;
         private byte _symbol;
         private TextPosition _token;
         private string _addrName;
         private int _nmbInt;
-        private float _nmbFloat;
-        private char _oneSymbol;
 
-        private int _parenthesisBalance = 0;
+        private int _parenthesisBalance;
         private TextPosition _lastLeftParPos;
 
         public byte Symbol => _symbol;
         public TextPosition Token => _token;
 
+        public LexicalAnalyzer(InputOutput io)
+        {
+            _io = io;
+            _keywordsObj = new Keywords();
+            _symbol = 0;
+            _token = new TextPosition(0, 0);
+            _addrName = string.Empty;
+            _nmbInt = 0;
+            _parenthesisBalance = 0;
+            _lastLeftParPos = new TextPosition(0, 0);
+        }
+
         public byte NextSym()
         {
-            while (InputOutput.Ch == ' ' || InputOutput.Ch == '\n' 
-                || InputOutput.Ch == '\r')
+            while (_io.Ch == ' ' || _io.Ch == '\n' || _io.Ch == '\r')
             {
-                InputOutput.NextCh();
+                _io.NextCh();
             }
 
-            _token = InputOutput.PositionNow;
+            _token = _io.PositionNow;
 
-            if (InputOutput.Ch == '\0')
+            if (_io.Ch == '\0')
             {
                 if (_parenthesisBalance > 0)
                 {
-                    InputOutput.Error(250, _lastLeftParPos);
+                    _io.Error(250, _lastLeftParPos);
                     _parenthesisBalance = 0;
                 }
                 _symbol = 0;
                 return _symbol;
             }
 
-            if (InputOutput.Ch >= '0' && InputOutput.Ch <= '9')
+            if (_io.Ch >= '0' && _io.Ch <= '9')
             {
                 byte digit;
                 short maxint = short.MaxValue;
                 _nmbInt = 0;
 
-                while (InputOutput.Ch >= '0' && InputOutput.Ch <= '9')
+                while (_io.Ch >= '0' && _io.Ch <= '9')
                 {
-                    digit = (byte)(InputOutput.Ch - '0');
-                    if (_nmbInt < maxint / 10 || (_nmbInt == maxint / 10 
-                        && digit <= maxint % 10))
+                    digit = (byte)(_io.Ch - '0');
+                    if (_nmbInt < maxint / 10 || 
+                    (_nmbInt == maxint / 10 && digit <= maxint % 10))
                     {
                         _nmbInt = 10 * _nmbInt + digit;
                     }
                     else
                     {
-                        InputOutput.Error(203, InputOutput.PositionNow);
+                        _io.Error(203, _io.PositionNow);
                         _nmbInt = 0;
-                        while (InputOutput.Ch >= '0' 
-                            && InputOutput.Ch <= '9')
+                        while (_io.Ch >= '0' && _io.Ch <= '9')
                         {
-                            InputOutput.NextCh();
+                            _io.NextCh();
                         }
                     }
-                    InputOutput.NextCh();
+                    _io.NextCh();
                 }
                 _symbol = Intc;
             }
-            else if ((InputOutput.Ch >= 'a' && InputOutput.Ch <= 'z') 
-                || (InputOutput.Ch >= 'A' && InputOutput.Ch <= 'Z'))
+            else if ((_io.Ch >= 'a' && _io.Ch <= 'z') || 
+            (_io.Ch >= 'A' && _io.Ch <= 'Z'))
             {
                 string name = "";
-                while ((InputOutput.Ch >= 'a' && InputOutput.Ch <= 'z') ||
-                       (InputOutput.Ch >= 'A' && InputOutput.Ch <= 'Z') ||
-                       (InputOutput.Ch >= '0' && InputOutput.Ch <= '9'))
+                while ((_io.Ch >= 'a' && _io.Ch <= 'z') ||
+                       (_io.Ch >= 'A' && _io.Ch <= 'Z') ||
+                       (_io.Ch >= '0' && _io.Ch <= '9'))
                 {
-                    name += InputOutput.Ch;
-                    InputOutput.NextCh();
+                    name += _io.Ch;
+                    _io.NextCh();
                 }
 
                 _addrName = name.ToLower();
@@ -160,36 +169,35 @@ namespace Компилятор
             }
             else
             {
-                switch (InputOutput.Ch)
+                switch (_io.Ch)
                 {
                     case '(':
                         _symbol = Leftpar;
                         _parenthesisBalance++;
-                        _lastLeftParPos = InputOutput.PositionNow;
-                        InputOutput.NextCh();
+                        _lastLeftParPos = _io.PositionNow;
+                        _io.NextCh();
                         break;
                     case ')':
                         _symbol = Rightpar;
                         _parenthesisBalance--;
                         if (_parenthesisBalance < 0)
                         {
-                            InputOutput.Error(
-                                250, InputOutput.PositionNow);
+                            _io.Error(250, _io.PositionNow);
                             _parenthesisBalance = 0;
                         }
-                        InputOutput.NextCh();
+                        _io.NextCh();
                         break;
                     case '<':
-                        InputOutput.NextCh();
-                        if (InputOutput.Ch == '=')
+                        _io.NextCh();
+                        if (_io.Ch == '=')
                         {
                             _symbol = Laterequal;
-                            InputOutput.NextCh();
+                            _io.NextCh();
                         }
-                        else if (InputOutput.Ch == '>')
+                        else if (_io.Ch == '>')
                         {
                             _symbol = Latergreater;
-                            InputOutput.NextCh();
+                            _io.NextCh();
                         }
                         else
                         {
@@ -197,11 +205,11 @@ namespace Компилятор
                         }
                         break;
                     case ':':
-                        InputOutput.NextCh();
-                        if (InputOutput.Ch == '=')
+                        _io.NextCh();
+                        if (_io.Ch == '=')
                         {
                             _symbol = Assign;
-                            InputOutput.NextCh();
+                            _io.NextCh();
                         }
                         else
                         {
@@ -210,18 +218,38 @@ namespace Компилятор
                         break;
                     case ';':
                         _symbol = Semicolon;
-                        InputOutput.NextCh();
+                        _io.NextCh();
+                        break;
+                    case ',':
+                        _symbol = Comma;
+                        _io.NextCh();
                         break;
                     case '=':
                         _symbol = Equal;
-                        InputOutput.NextCh();
+                        _io.NextCh();
+                        break;
+                    case '+':
+                        _symbol = Plus;
+                        _io.NextCh();
+                        break;
+                    case '-':
+                        _symbol = Minus;
+                        _io.NextCh();
+                        break;
+                    case '*':
+                        _symbol = Star;
+                        _io.NextCh();
+                        break;
+                    case '/':
+                        _symbol = Slash;
+                        _io.NextCh();
                         break;
                     case '.':
-                        InputOutput.NextCh();
-                        if (InputOutput.Ch == '.')
+                        _io.NextCh();
+                        if (_io.Ch == '.')
                         {
                             _symbol = Twopoints;
-                            InputOutput.NextCh();
+                            _io.NextCh();
                         }
                         else
                         {
@@ -230,7 +258,7 @@ namespace Компилятор
                         break;
                     default:
                         _symbol = 0;
-                        InputOutput.NextCh();
+                        _io.NextCh();
                         break;
                 }
             }

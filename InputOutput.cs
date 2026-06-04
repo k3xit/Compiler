@@ -36,39 +36,49 @@ namespace Компилятор
 
     public class InputOutput
     {
-        private const byte Errmax = 9;
-        private static readonly List<string> _programText = 
-            new List<string>();
-        private static readonly Dictionary<byte, string> _errorMessages = 
-            new Dictionary<byte, string>
+        private readonly byte _errmax;
+        private readonly List<string> _programText;
+        private readonly Dictionary<byte, string> _errorMessages;
+
+        private int _currentLineIndex;
+        private char _ch;
+        private TextPosition _positionNow;
+        private List<Err> _errList;
+        private StreamReader _file;
+        private StreamWriter _codeFile;
+        private uint _errCount;
+
+        public char Ch => _ch;
+        public TextPosition PositionNow => _positionNow;
+        public StreamReader File => _file;
+        public uint ErrCount => _errCount;
+
+        public InputOutput(string sourcePath, string codePath)
+        {
+            _errmax = 9;
+            _programText = new List<string>();
+            _errorMessages = new Dictionary<byte, string>
             {
                 { 14, "Ожидалась точка с запятой" },
                 { 51, "Ожидался знак присваивания" },
                 { 203, "Целая константа превышает предел" },
-                { 250, "Нарушен баланс круглых скобок" }
+                { 250, "Нарушен баланс круглых скобок" },
+                { 2, "Ожидался идентификатор (имя или тип данных)" },
+                { 5, "Ожидалось двоеточие ':'" },
+                { 98, "Ошибка в выражении: неверный множитель" },
+                { 99, "Недопустимый оператор (ожидалось присваивание)" },
+                { 104, "Ожидалось ключевое слово 'end'" },
+                { 113, "Ожидалось ключевое слово 'begin'" }
             };
 
-        private static int _currentLineIndex = -1;
-        private static char _ch;
-        private static TextPosition _positionNow = new TextPosition();
-        private static List<Err> _errList = new List<Err>();
-        private static StreamReader _file;
-        private static StreamWriter _codeFile;
-        private static uint _errCount;
-
-        public static char Ch => _ch;
-        public static TextPosition PositionNow => _positionNow;
-        public static StreamReader File => _file;
-        public static uint ErrCount => _errCount;
-
-        public static void Initialize(string filePath)
-        {
-            _file = new StreamReader(filePath);
-            _programText.Clear();
-            _errList.Clear();
-            _errCount = 0;
-            _positionNow = new TextPosition(0, 0);
             _currentLineIndex = -1;
+            _ch = '\0';
+            _positionNow = new TextPosition(0, 0);
+            _errList = new List<Err>();
+            _errCount = 0;
+
+            _file = new StreamReader(sourcePath);
+            _codeFile = new StreamWriter(codePath);
 
             while (!_file.EndOfStream)
             {
@@ -85,12 +95,8 @@ namespace Компилятор
                     : '\n';
             }
         }
-        public static void InitializeCodeFile(string filePath)
-        {
-            _codeFile = new StreamWriter(filePath);
-        }
 
-        public static void WriteCode(byte code)
+        public void WriteCode(byte code)
         {
             if (_codeFile != null && code != 0)
             {
@@ -98,10 +104,10 @@ namespace Компилятор
             }
         }
 
-        public static void NextCh()
+        public void NextCh()
         {
-            if (_currentLineIndex == -1 
-                || _currentLineIndex >= _programText.Count)
+            if (_currentLineIndex == -1 || _currentLineIndex >= 
+            _programText.Count)
             {
                 return;
             }
@@ -113,8 +119,8 @@ namespace Компилятор
                 _currentLineIndex++;
                 if (_currentLineIndex < _programText.Count)
                 {
-                    _positionNow = new TextPosition(
-                        _positionNow.LineNumber + 1, 0);
+                    _positionNow = 
+                    new TextPosition(_positionNow.LineNumber + 1, 0);
                     _ch = _programText[_currentLineIndex].Length > 0 
                         ? _programText[_currentLineIndex][0] 
                         : '\n';
@@ -134,15 +140,15 @@ namespace Компилятор
             }
         }
 
-        public static void Error(byte errorCode, TextPosition position)
+        public void Error(byte errorCode, TextPosition position)
         {
-            if (_errList.Count <= Errmax)
+            if (_errList.Count <= _errmax)
             {
                 _errList.Add(new Err(position, errorCode));
             }
         }
 
-        public static void OutputResult()
+        public void OutputResult()
         {
             if (_codeFile != null)
             {
@@ -172,13 +178,13 @@ namespace Компилятор
                         : "Неизвестная ошибка";
 
                     pointerLine += 
-                        $"^ ошибка: код {item.ErrorCode} ({msg})";
+                    $"^ ошибка: код {item.ErrorCode} ({msg})";
                     Console.WriteLine(pointerLine);
                 }
             }
 
-            Console.WriteLine(
-                $"Компиляция завершена: ошибок — {_errCount}!");
+            Console.WriteLine("Компиляция завершена: " +
+            $"ошибок — {_errCount}!");
         }
     }
 }

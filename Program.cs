@@ -11,34 +11,28 @@ namespace Компилятор
             string resultFile1 = "test1.txt";
             string testFile2 = "test2.pas";
             string resultFile2 = "test2.txt";
+            string testFile3 = "test3.pas";
+            string resultFile3 = "test3.txt";
 
             Console.WriteLine("=== ЗАПУСК ТЕСТА 1 ===");
             RunTest(testFile1, resultFile1);
             Console.WriteLine("=== ЗАПУСК ТЕСТА 2 ===");
             RunTest(testFile2, resultFile2);
+            Console.WriteLine("=== ЗАПУСК ТЕСТА 3 ===");
+            RunTest(testFile3, resultFile3);
             Console.ReadLine();
         }
 
         private static void RunTest(string srcPath, string resPath)
         {
-            InputOutput.Initialize(srcPath);
-            InputOutput.InitializeCodeFile(resPath);
+            InputOutput io = new InputOutput(srcPath, resPath);
+            LexicalAnalyzer analyzer = new LexicalAnalyzer(io);
             
-            LexicalAnalyzer analyzer = new LexicalAnalyzer();
-
-            while (true)
-            {
-                byte code = analyzer.NextSym();
-                
-                if (code == 0)
-                {
-                    break;
-                }
-
-                InputOutput.WriteCode(code);
-            }
+            SyntaxAnalyzer syntax = new SyntaxAnalyzer(analyzer, io);
             
-            InputOutput.OutputResult();
+            syntax.Parse();
+            
+            io.OutputResult(); 
         }
     }
 }

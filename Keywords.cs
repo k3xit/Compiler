@@ -4,13 +4,13 @@ namespace Компилятор
 {
     public class Keywords
     {
-        private readonly Dictionary<byte, Dictionary<string, byte>> _kw = 
-            new Dictionary<byte, Dictionary<string, byte>>();
+        private readonly Dictionary<byte, Dictionary<string, byte>> _kw;
 
         public Dictionary<byte, Dictionary<string, byte>> Kw => _kw;
 
         public Keywords()
         {
+            _kw = new Dictionary<byte, Dictionary<string, byte>>();
             Dictionary<string, byte> tmp = new Dictionary<string, byte>();
             tmp["do"] = LexicalAnalyzer.Dosy;
             tmp["if"] = LexicalAnalyzer.Ifsy;

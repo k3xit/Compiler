@@ -1,6 +1,9 @@
-program Test2;
+program ErrorInDeclarations;
+const
+  d = 32770;  
 var
-  a : integer;
+  a, c : integer; 
+  b : real  
 begin
-  a := ((123);
+  a := 5;
 end.
