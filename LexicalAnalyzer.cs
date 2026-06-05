@@ -204,6 +204,18 @@ namespace Компилятор
                             _symbol = Later;
                         }
                         break;
+                    case '>':
+                        _io.NextCh();
+                        if (_io.Ch == '=')
+                        {
+                            _symbol = Greaterequal;
+                            _io.NextCh();
+                        }
+                        else
+                        {
+                            _symbol = Greater;
+                        }
+                        break;
                     case ':':
                         _io.NextCh();
                         if (_io.Ch == '=')
